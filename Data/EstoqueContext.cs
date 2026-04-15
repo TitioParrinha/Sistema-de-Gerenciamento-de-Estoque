@@ -9,7 +9,7 @@ namespace Estoque.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            // Essa linha cria um banco de dados local no seu PC chamado EstoqueDB
+            // Criação de banco de dados local
             options.UseSqlServer(@"Server=localhost\SQLEXPRESS;Database=EstoqueDB;Trusted_Connection=True;TrustServerCertificate=True;");
         }
     }

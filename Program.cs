@@ -1,10 +1,12 @@
 ﻿using Estoque.Models;
 using Estoque.Data;
+using Estoque.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Reflection;
 
 using var db = new EstoqueContext();
+var estoqueService = new EstoqueService(db);
 bool sistemaAtivo = true;
 
 Console.WriteLine("--- Sistema de Gerenciamento de Estoque ---");
@@ -18,7 +20,8 @@ while (sistemaAtivo)
     Console.WriteLine("4. Descrição do produto");
     Console.WriteLine("5. Deletar Produto");
     Console.WriteLine("6. Sair");
-    Console.Write("Opção: ");
+    Console.WriteLine("");
+    Console.Write("Escolha uma Opção: ");
 
     string opcao = Console.ReadLine();
 
@@ -31,26 +34,26 @@ while (sistemaAtivo)
             Console.Write("Descrição do produto: ");
             novoProduto.Descricao = Console.ReadLine();
             Console.Write("Quantidade: ");
+            
             if (int.TryParse(Console.ReadLine(), out int qtd))
             {
                 novoProduto.Quantidade = qtd;
                 
-                // SALVANDO NO BANCO
-                db.Produtos.Add(novoProduto); // Adiciona na fila
-                db.SaveChanges();             // Grava no SQL de verdade!
+                
+                estoqueService.AdicionarProduto(novoProduto);
                 
                 Console.WriteLine("Produto salvo com sucesso no SQL Server!");
             }
             break;
 
         case "2":
-            Console.WriteLine("\nProdutos em estoque (buscando no banco...):");
-            // Buscamos na tabela 'Produtos' do banco
-            var listaDeProdutos = db.Produtos.ToList();
+            Console.WriteLine("\nProdutos em estoque:");
+
+            var listaDeProdutos = estoqueService.ListarTodos();
             
             foreach (var produto in listaDeProdutos)
             {
-                Console.WriteLine($"- ID: {produto.Id} | {produto.Nome}: {produto.Quantidade} unidades");
+                Console.WriteLine($"- ID: {produto.Id} | {produto.Nome}: {produto.Quantidade} unidade(s)");
             }
             break;
 
@@ -60,20 +63,21 @@ while (sistemaAtivo)
             if(int.TryParse(Console.ReadLine(), out int IdParaSalvar))
             {
 
-            var Produto = db.Produtos.Find(IdParaSalvar);
+            var Produto = estoqueService.BuscarPorId(IdParaSalvar);
 
                 if (Produto != null)
                 {
                     Console.WriteLine($"(Produto Encontrado: {Produto.Nome})  (Quantidade: {Produto.Quantidade})");
+                    
                     Console.Write("Quantidade para retirar: ");
 
                     if(int.TryParse(Console.ReadLine(), out int qtdSaida) && qtdSaida > 0 )
                     {
 
-                            if(Produto.Quantidade >= qtdSaida)
+                        bool sucesso = estoqueService.MexerEstoque(IdParaSalvar, qtdSaida);
+
+                            if(sucesso)
                         {
-                            Produto.Quantidade -= qtdSaida;
-                            db.SaveChanges();
                             Console.WriteLine("Retirada salva com sucesso!");
                         }
 
@@ -99,7 +103,7 @@ while (sistemaAtivo)
 
             if(int.TryParse(Console.ReadLine(), out int IdParaDescricao))
             {
-                var Produto = db.Produtos.Find(IdParaDescricao);
+                var Produto = estoqueService.BuscarPorId(IdParaDescricao);
                 
                 Console.WriteLine($"-----{Produto.Nome}-----");
                 Console.WriteLine($"{Produto.Descricao}");
@@ -108,12 +112,11 @@ while (sistemaAtivo)
             break;
 
         case "5":
-
             Console.Write("Digite a Identificação(ID) do produto que deseja remover: ");
 
             if(int.TryParse(Console.ReadLine(), out int IdParaExcluir))
             {
-                var Produto = db.Produtos.Find(IdParaExcluir);
+                var Produto = estoqueService.BuscarPorId(IdParaExcluir);
                 
                 if(Produto != null)
                 {
@@ -122,9 +125,7 @@ while (sistemaAtivo)
 
                     if(confirmacao == "S")
                     {
-                        db.Produtos.Remove(Produto);
-
-                        db.SaveChanges();
+                        estoqueService.ExcluirProduto(IdParaExcluir);
 
                         Console.Write("Exclusão de produto concluída.");
                     }
