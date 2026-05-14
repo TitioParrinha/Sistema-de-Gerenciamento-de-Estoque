@@ -7,3 +7,8 @@ Tecnologias Utilizadas: C#, .NET, Entity Framework, MySQL.
 Funções implementadas no sistema:
 
 - Adicionar Produto
+- Listar Produtos
+- Editar Produtos Cadastrados(Adicionar ou Remover)
+- Exibir Descrição dos Produtos
+- Deletar Produto
+- Sair do Sistema
